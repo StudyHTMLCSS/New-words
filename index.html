@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>English Flashcards</title>
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+      --card-front: #ffffff;
+      --card-back: #fef9c3;
+      --accent: #f59e0b;
+      --accent-dark: #d97706;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg-gradient);
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      width: 10%;
+      transition: width 0.3s ease;
+    }
+
+    .counter {
+      font-size: 0.9rem;
+      color: #cbd5e1;
+      font-weight: 600;
+    }
+
+    .scene {
+      width: 100%;
+      max-width: 380px;
+      height: 440px;
+      perspective: 1000px;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+      transform-style: preserve-3d;
+      cursor: pointer;
+    }
+
+    .card.is-flipped {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border-radius: 24px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 20px 35px rgba(0, 0, 0, 0.35);
+      border: 4px solid #1e293b;
+    }
+
+    .card-front {
+      background: var(--card-front);
+      color: var(--text-main);
+    }
+
+    .card-back {
+      background: var(--card-back);
+      color: var(--text-main);
+      transform: rotateY(180deg);
+      justify-content: center;
+      text-align: center;
+      gap: 16px;
+    }
+
+    .badge {
+      align-self: flex-start;
+      background: #e2e8f0;
+      color: #334155;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .card-back .badge {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      background: #fde047;
+      color: #713f12;
+    }
+
+    .image-box {
+      width: 210px;
+      height: 210px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #ffffff;
+    }
+
+    .image-box img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .emoji-fallback {
+      font-size: 6rem;
+      line-height: 1;
+    }
+
+    .word-en {
+      font-size: 1.85rem;
+      font-weight: 800;
+      text-align: center;
+      line-height: 1.2;
+    }
+
+    .word-ru {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1.2;
+    }
+
+    .hint-text {
+      font-size: 1rem;
+      color: #475569;
+      max-width: 280px;
+    }
+
+    .audio-btn {
+      background: var(--accent);
+      color: #0f172a;
+      border: none;
+      border-radius: 999px;
+      padding: 10px 20px;
+      font-size: 1rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 0 var(--accent-dark);
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+
+    .audio-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 var(--accent-dark);
+    }
+
+    .tap-hint {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+      max-width: 380px;
+    }
+
+    .nav-btn {
+      flex: 1;
+      padding: 14px;
+      border-radius: 16px;
+      border: none;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      backdrop-filter: blur(6px);
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .nav-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .nav-btn:active {
+      transform: scale(0.97);
+    }
+
+    .nav-btn.primary {
+      background: #3b82f6;
+    }
+
+    .nav-btn.primary:hover {
+      background: #2563eb;
+    }
+
+    .shuffle-btn {
+      margin-top: 12px;
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #cbd5e1;
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .shuffle-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Vocabulary Cards</h1>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <div class="counter" id="counter">1 / 10</div>
+  </div>
+
+  <div class="scene">
+    <div class="card" id="flashcard" onclick="flipCard()">
+      <!-- Лицевая сторона -->
+      <div class="card-face card-front">
+        <span class="badge">English</span>
+        <div class="image-box" id="imageBox"></div>
+        <div class="word-en" id="wordEn">Viking</div>
+        <button class="audio-btn" onclick="speakWord(event)">
+          🔊 Listen
+        </button>
+        <div class="tap-hint">Нажмите на карточку, чтобы перевернуть</div>
+      </div>
+
+      <!-- Обратная сторона -->
+      <div class="card-face card-back">
+        <span class="badge">Перевод</span>
+        <div class="word-ru" id="wordRu">Викинг</div>
+        <div class="hint-text" id="hintText">Scandinavian warrior</div>
+        <button class="audio-btn" onclick="speakWord(event)">
+          🔊 Повторить
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="nav-btn" onclick="prevCard()">← Назад</button>
+    <button class="nav-btn primary" onclick="nextCard()">Вперёд →</button>
+  </div>
+
+  <button class="shuffle-btn" onclick="shuffleCards()">🔀 Перемешать карточки</button>
+
+  <script>
+    const initialCards = [
+      { en: "Viking", ru: "Викинг", hint: "Scandinavian warrior", img: "22.jpg", emoji: "🪓" },
+      { en: "Ancient Greek", ru: "Древний грек", hint: "Warrior from ancient Greece", img: "23.jpg", emoji: "🏛️" },
+      { en: "Stone Age man / caveman", ru: "Пещерный человек", hint: "Prehistoric human living in caves", img: "24.jpg", emoji: "🦴" },
+      { en: "Knight", ru: "Рыцарь", hint: "Medieval warrior in armor", img: "25.jpg", emoji: "🛡️" },
+      { en: "Kindergarten", ru: "Детский сад", hint: "Preschool for young children", img: "26.jpg", emoji: "🎨" },
+      { en: "Dress up", ru: "Наряжаться / переодеваться", hint: "Put on a costume or special clothes", img: "27.jpg", emoji: "🦖" },
+      { en: "Pirate", ru: "Пират", hint: "Sea robber with a ship and parrot", img: "28.jpg", emoji: "🏴‍☠️" },
+      { en: "Cowboy", ru: "Ковбой", hint: "Horseman from the American Wild West", img: "29.png", emoji: "🤠" },
+      { en: "Princess", ru: "Принцесса", hint: "Daughter of a king and queen", img: "30.png", emoji: "👑" },
+      { en: "Dolls", ru: "Куклы", hint: "Toys shaped like people", img: "31.png", emoji: "🪆" }
+    ];
+
+    let cards = [...initialCards];
+    let currentIndex = 0;
+
+    const cardEl = document.getElementById("flashcard");
+    const wordEnEl = document.getElementById("wordEn");
+    const wordRuEl = document.getElementById("wordRu");
+    const hintTextEl = document.getElementById("hintText");
+    const imageBoxEl = document.getElementById("imageBox");
+    const counterEl = document.getElementById("counter");
+    const progressFillEl = document.getElementById("progressFill");
+
+    function renderCard() {
+      cardEl.classList.remove("is-flipped");
+      const current = cards[currentIndex];
+
+      wordEnEl.textContent = current.en;
+      wordRuEl.textContent = current.ru;
+      hintTextEl.textContent = current.hint;
+      counterEl.textContent = `${currentIndex + 1} / ${cards.length}`;
+      progressFillEl.style.width = `${((currentIndex + 1) / cards.length) * 100}%`;
+
+      imageBoxEl.innerHTML = "";
+      const img = document.createElement("img");
+      img.src = current.img;
+      img.alt = current.en;
+      img.onerror = () => {
+        imageBoxEl.innerHTML = `<div class="emoji-fallback">${current.emoji}</div>`;
+      };
+      imageBoxEl.appendChild(img);
+    }
+
+    function flipCard() {
+      cardEl.classList.toggle("is-flipped");
+    }
+
+    function nextCard() {
+      currentIndex = (currentIndex + 1) % cards.length;
+      renderCard();
+    }
+
+    function prevCard() {
+      currentIndex = (currentIndex - 1 + cards.length) % cards.length;
+      renderCard();
+    }
+
+    function shuffleCards() {
+      for (let i = cards.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [cards[i], cards[j]] = [cards[j], cards[i]];
+      }
+      currentIndex = 0;
+      renderCard();
+    }
+
+    function speakWord(event) {
+      event.stopPropagation();
+      if (!("speechSynthesis" in window)) {
+        alert("Ваш браузер не поддерживает озвучку текста.");
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const textToSpeak = cards[currentIndex].en.replace("/", ",");
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      utterance.lang = "en-US";
+      utterance.rate = 0.9;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "ArrowRight") nextCard();
+      if (e.code === "ArrowLeft") prevCard();
+      if (e.code === "Space") {
+        e.preventDefault();
+        flipCard();
+      }
+    });
+
+    renderCard();
+  </script>
+</body>
+</html>
