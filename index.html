@@ -187,7 +187,7 @@
       color: #0f172a;
       border: none;
       border-radius: 999px;
-      padding: 10px 20px;
+      padding: 10px 22px;
       font-size: 1rem;
       font-weight: 700;
       display: inline-flex;
@@ -195,12 +195,16 @@
       gap: 8px;
       cursor: pointer;
       box-shadow: 0 4px 0 var(--accent-dark);
-      transition: transform 0.1s, box-shadow 0.1s;
+      transition: transform 0.1s, box-shadow 0.1s, background 0.2s;
     }
 
     .audio-btn:active {
       transform: translateY(3px);
       box-shadow: 0 1px 0 var(--accent-dark);
+    }
+
+    .audio-btn.is-playing {
+      background: #fbbf24;
     }
 
     .tap-hint {
@@ -320,6 +324,7 @@
 
     let cards = [...initialCards];
     let currentIndex = 0;
+    let currentAudio = null;
 
     const cardEl = document.getElementById("flashcard");
     const wordEnEl = document.getElementById("wordEn");
@@ -372,18 +377,45 @@
       renderCard();
     }
 
+    function speakFallback(text) {
+      if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = "en-US";
+        utterance.rate = 0.9;
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
     function speakWord(event) {
       event.stopPropagation();
-      if (!("speechSynthesis" in window)) {
-        alert("Ваш браузер не поддерживает озвучку текста.");
-        return;
-      }
-      window.speechSynthesis.cancel();
+      const btn = event.currentTarget;
       const textToSpeak = cards[currentIndex].en.replace("/", ",");
-      const utterance = new SpeechSynthesisUtterance(textToSpeak);
-      utterance.lang = "en-US";
-      utterance.rate = 0.9;
-      window.speechSynthesis.speak(utterance);
+
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+      }
+
+      btn.classList.add("is-playing");
+
+      // Универсальная онлайн-озвучка через стандартный Audio-элемент (работает во всех мобильных браузерах и Telegram)
+      const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&q=${encodeURIComponent(textToSpeak)}`;
+      currentAudio = new Audio(url);
+
+      currentAudio.onended = () => btn.classList.remove("is-playing");
+      currentAudio.onerror = () => {
+        btn.classList.remove("is-playing");
+        speakFallback(textToSpeak);
+      };
+
+      const playPromise = currentAudio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          btn.classList.remove("is-playing");
+          speakFallback(textToSpeak);
+        });
+      }
     }
 
     document.addEventListener("keydown", (e) => {
